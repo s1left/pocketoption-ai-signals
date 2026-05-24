@@ -71,6 +71,52 @@ paths:
                 items:
                   $ref: "#/components/schemas/Signal"
 
+  /history/clear:
+    delete:
+      operationId: clearUserHistory
+      tags: [history]
+      summary: Clear all history for a user
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: History cleared
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted:
+                    type: integer
+                required: [deleted]
+
+  /admin/history/{userId}:
+    delete:
+      operationId: clearUserHistoryAdmin
+      tags: [history]
+      summary: Admin clear history for any user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: History cleared
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted:
+                    type: integer
+                required: [deleted]
+
   /history:
     get:
       operationId: getHistory

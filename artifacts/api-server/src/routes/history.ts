@@ -96,4 +96,18 @@ router.patch("/history/:id/result", async (req, res) => {
   });
 });
 
+router.delete("/history/clear", async (req, res) => {
+  const userId = req.query.userId as string;
+  if (!userId) return res.status(400).json({ error: "userId is required" });
+  const result = await SignalHistory.deleteMany({ userId });
+  return res.json({ deleted: result.deletedCount });
+});
+
+router.delete("/admin/history/:userId", async (req, res) => {
+  const userId = req.params.userId;
+  if (!userId) return res.status(400).json({ error: "userId is required" });
+  const result = await SignalHistory.deleteMany({ userId });
+  return res.json({ deleted: result.deletedCount });
+});
+
 export default router;

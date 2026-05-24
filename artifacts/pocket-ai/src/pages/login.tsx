@@ -1,109 +1,68 @@
-import React, { useState, useEffect } from "react";
-import { useLocation, useSearch } from "wouter";
+import React, { useEffect } from "react";
+import { useSearch } from "wouter";
 import { useAuth } from "../hooks/use-auth";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Activity, ShieldAlert, ChevronDown, ChevronUp } from "lucide-react";
+import { Activity } from "lucide-react";
 import { SiTelegram } from "react-icons/si";
 
 export default function Login() {
-  const [telegramId, setTelegramId] = useState("");
-  const [showManual, setShowManual] = useState(false);
   const { login } = useAuth();
   const search = useSearch();
-  const [, setLocation] = useLocation();
 
   useEffect(() => {
     const params = new URLSearchParams(search);
     const id = params.get("id");
-    if (id) {
-      login(id);
-    }
-  }, [search, login]);
+    if (id) login(id);
+  }, [search]);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (telegramId.trim()) {
-      login(telegramId.trim());
-    }
-  };
-
-  const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME || "pocketai_bot";
-  const telegramUrl = `https://t.me/${botUsername}`;
+  const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME || "Pocketoption_ai_signal_bot";
 
   return (
     <div className="min-h-[100dvh] w-full bg-background flex flex-col items-center justify-center p-4 relative overflow-hidden grid-bg">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/8 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="w-full max-w-md glass border border-border p-8 relative z-10 rounded-xl">
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-20 h-20 bg-primary/10 border border-primary/30 flex items-center justify-center mb-6 rounded-lg glow-red">
-            <Activity className="text-primary w-10 h-10" />
+      <div className="w-full max-w-sm glass border border-border p-7 relative z-10 rounded-2xl">
+        <div className="flex flex-col items-center mb-7">
+          <div className="w-16 h-16 bg-primary/10 border border-primary/30 flex items-center justify-center mb-4 rounded-xl glow-red">
+            <Activity className="text-primary w-8 h-8" />
           </div>
-          <h1 className="text-4xl font-orbitron font-bold text-foreground text-center tracking-wider">
+          <h1 className="text-3xl font-orbitron font-bold text-foreground text-center tracking-wider">
             POCKET AI <span className="text-primary">PRO</span>
           </h1>
-          <p className="text-muted-foreground mt-3 text-sm uppercase tracking-widest font-mono text-center">
-            Secure Terminal Authentication
+          <p className="text-muted-foreground mt-2 text-xs uppercase tracking-widest font-mono text-center">
+            Secure Signal Terminal
           </p>
         </div>
 
-        <div className="space-y-6">
-          <Button
-            asChild
-            className="w-full h-16 text-lg font-bold bg-[#0088cc] hover:bg-[#0088cc]/90 text-white rounded-lg flex items-center justify-center gap-3 transition-all"
+        <div className="space-y-5">
+          <a
+            href={`https://t.me/${botUsername}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full h-14 bg-[#0088cc] hover:bg-[#0077bb] text-white rounded-xl flex items-center justify-center gap-3 font-orbitron font-bold tracking-widest transition-all active:scale-95"
           >
-            <a href={telegramUrl} target="_blank" rel="noopener noreferrer">
-              <SiTelegram className="w-6 h-6" />
-              LOGIN WITH TELEGRAM
-            </a>
-          </Button>
+            <SiTelegram className="w-5 h-5" />
+            ВОЙТИ ЧЕРЕЗ TELEGRAM
+          </a>
 
-          <div className="space-y-4 text-sm font-mono text-muted-foreground bg-black/40 p-4 rounded-lg border border-border">
-            <h3 className="font-bold text-foreground mb-2">AUTH SEQUENCE:</h3>
-            <ol className="list-decimal pl-5 space-y-2">
-              <li>Open Pocket AI Bot</li>
-              <li>Type /start to activate</li>
-              <li>Click returned secure link</li>
-            </ol>
-          </div>
-
-          <div className="border-t border-border pt-4">
-            <button
-              type="button"
-              onClick={() => setShowManual(!showManual)}
-              className="flex items-center justify-between w-full text-xs uppercase font-mono text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <span>MANUAL ID ENTRY</span>
-              {showManual ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </button>
-
-            {showManual && (
-              <form onSubmit={handleLogin} className="mt-4 space-y-4 animate-in fade-in slide-in-from-top-2">
-                <div className="relative">
-                  <ShieldAlert className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                  <Input
-                    type="text"
-                    value={telegramId}
-                    onChange={(e) => setTelegramId(e.target.value)}
-                    placeholder="Enter Telegram ID"
-                    className="pl-10 bg-background/50 border-border font-mono h-12 focus-visible:ring-primary"
-                    required
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full h-12 font-orbitron font-bold tracking-widest bg-primary hover:bg-primary/90 text-primary-foreground glow-red"
-                >
-                  CONNECT
-                </Button>
-              </form>
-            )}
+          <div className="bg-black/30 p-4 rounded-xl border border-border text-sm font-mono text-muted-foreground space-y-2">
+            <p className="font-bold text-foreground text-xs uppercase tracking-wider mb-3">Как получить доступ:</p>
+            <div className="flex gap-3 items-start">
+              <span className="text-primary font-bold shrink-0">1.</span>
+              <span>Нажмите кнопку выше и откройте бота</span>
+            </div>
+            <div className="flex gap-3 items-start">
+              <span className="text-primary font-bold shrink-0">2.</span>
+              <span>Отправьте <code className="bg-primary/10 text-primary px-1 rounded">/start</code> — запрос уйдёт администратору</span>
+            </div>
+            <div className="flex gap-3 items-start">
+              <span className="text-primary font-bold shrink-0">3.</span>
+              <span>После одобрения нажмите ссылку от бота — войдёте автоматически</span>
+            </div>
           </div>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-border flex justify-between text-[10px] font-mono text-muted-foreground">
-          <span>v3.0.0_PRO</span>
+        <div className="mt-6 pt-4 border-t border-border flex justify-between text-[10px] font-mono text-muted-foreground">
+          <span>v3.0.0 PRO</span>
           <span className="text-green-500">SYSTEM READY</span>
         </div>
       </div>

@@ -944,3 +944,63 @@ export const useUpdateUserAccess = <TError = ErrorType<unknown>,
       return useMutation(getUpdateUserAccessMutationOptions(options));
     }
 
+
+
+export const getClearUserHistoryUrl = (params: { userId: string }) => {
+  return `/api/history/clear?userId=${params.userId}`;
+};
+
+export const clearUserHistory = async (params: { userId: string }, options?: RequestInit): Promise<{ deleted: number }> => {
+  return customFetch<{ deleted: number }>(getClearUserHistoryUrl(params), { ...options, method: 'DELETE' });
+};
+
+export const getClearUserHistoryMutationOptions = <TError = ErrorType<unknown>, TContext = unknown>(
+  options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof clearUserHistory>>, TError, { params: { userId: string } }, TContext>, request?: SecondParameter<typeof customFetch> }
+): UseMutationOptions<Awaited<ReturnType<typeof clearUserHistory>>, TError, { params: { userId: string } }, TContext> => {
+  const mutationKey = ['clearUserHistory'];
+  const { mutation: mutationOptions, request: requestOptions } = options ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ? options : { ...options, mutation: { ...options.mutation, mutationKey } } : { mutation: { mutationKey }, request: undefined };
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof clearUserHistory>>, { params: { userId: string } }> = (props) => {
+    const { params } = props ?? {};
+    return clearUserHistory(params, requestOptions);
+  };
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ClearUserHistoryMutationResult = NonNullable<Awaited<ReturnType<typeof clearUserHistory>>>;
+export type ClearUserHistoryMutationError = ErrorType<unknown>;
+
+export const useClearUserHistory = <TError = ErrorType<unknown>, TContext = unknown>(
+  options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof clearUserHistory>>, TError, { params: { userId: string } }, TContext>, request?: SecondParameter<typeof customFetch> }
+): UseMutationResult<Awaited<ReturnType<typeof clearUserHistory>>, TError, { params: { userId: string } }, TContext> => {
+  return useMutation(getClearUserHistoryMutationOptions(options));
+};
+
+
+export const getClearUserHistoryAdminUrl = (userId: string) => {
+  return `/api/admin/history/${userId}`;
+};
+
+export const clearUserHistoryAdmin = async (userId: string, options?: RequestInit): Promise<{ deleted: number }> => {
+  return customFetch<{ deleted: number }>(getClearUserHistoryAdminUrl(userId), { ...options, method: 'DELETE' });
+};
+
+export const getClearUserHistoryAdminMutationOptions = <TError = ErrorType<unknown>, TContext = unknown>(
+  options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof clearUserHistoryAdmin>>, TError, { userId: string }, TContext>, request?: SecondParameter<typeof customFetch> }
+): UseMutationOptions<Awaited<ReturnType<typeof clearUserHistoryAdmin>>, TError, { userId: string }, TContext> => {
+  const mutationKey = ['clearUserHistoryAdmin'];
+  const { mutation: mutationOptions, request: requestOptions } = options ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ? options : { ...options, mutation: { ...options.mutation, mutationKey } } : { mutation: { mutationKey }, request: undefined };
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof clearUserHistoryAdmin>>, { userId: string }> = (props) => {
+    const { userId } = props ?? {};
+    return clearUserHistoryAdmin(userId, requestOptions);
+  };
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ClearUserHistoryAdminMutationResult = NonNullable<Awaited<ReturnType<typeof clearUserHistoryAdmin>>>;
+export type ClearUserHistoryAdminMutationError = ErrorType<unknown>;
+
+export const useClearUserHistoryAdmin = <TError = ErrorType<unknown>, TContext = unknown>(
+  options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof clearUserHistoryAdmin>>, TError, { userId: string }, TContext>, request?: SecondParameter<typeof customFetch> }
+): UseMutationResult<Awaited<ReturnType<typeof clearUserHistoryAdmin>>, TError, { userId: string }, TContext> => {
+  return useMutation(getClearUserHistoryAdminMutationOptions(options));
+};
