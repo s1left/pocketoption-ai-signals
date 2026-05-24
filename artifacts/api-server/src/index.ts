@@ -1,6 +1,7 @@
 import app from "./app";
 import { logger } from "./lib/logger";
 import { connectMongo } from "./lib/mongodb";
+import { registerWebhookIfConfigured } from "./lib/telegram";
 
 const rawPort = process.env["PORT"];
 
@@ -23,6 +24,10 @@ app.listen(port, (err) => {
     process.exit(1);
   }
   logger.info({ port }, "Server listening");
+  // Attempt to register Telegram webhook when SITE_URL and TELEGRAM_BOT_TOKEN are provided
+  registerWebhookIfConfigured().catch((err) => {
+    logger.warn({ err }, "Failed to auto-register Telegram webhook");
+  });
 });
 
 // Connect to MongoDB in background (non-blocking)

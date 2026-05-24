@@ -8,12 +8,34 @@ export function useAuth() {
   });
   const [verified, setVerified] = useState(false);
   const [, setLocation] = useLocation();
+  const [initialSearch] = useState(() => window.location.search);
+
+  const login = useCallback((id: string) => {
+    localStorage.setItem("trader_id", id);
+    setTraderId(id);
+
+    fetch("/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ telegramId: id, username: id }),
+    }).catch(() => {});
+
+    setLocation("/");
+  }, [setLocation]);
 
   useEffect(() => {
     const id = localStorage.getItem("trader_id");
     if (!id) {
+      const queryId = new URLSearchParams(initialSearch).get("id");
+      if (queryId) {
+        login(queryId);
+        return;
+      }
+
       setVerified(true);
-      setLocation("/login");
+      if (window.location.pathname !== "/login") {
+        setLocation("/login");
+      }
       return;
     }
 
@@ -32,20 +54,7 @@ export function useAuth() {
         setTraderId(id);
       })
       .finally(() => setVerified(true));
-  }, [setLocation]);
-
-  const login = useCallback((id: string) => {
-    localStorage.setItem("trader_id", id);
-    setTraderId(id);
-
-    fetch("/api/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ telegramId: id, username: id }),
-    }).catch(() => {});
-
-    setLocation("/");
-  }, [setLocation]);
+  }, [initialSearch, login, setLocation]);
 
   const logout = useCallback(() => {
     localStorage.removeItem("trader_id");

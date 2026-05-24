@@ -1,6 +1,7 @@
 import Groq from "groq-sdk";
 
-const groq = new Groq({ apiKey: process.env["GROQ_API_KEY"] });
+const GROQ_API_KEY = process.env["GROQ_API_KEY"];
+const groq = GROQ_API_KEY ? new Groq({ apiKey: GROQ_API_KEY }) : null;
 
 export interface SignalResult {
   action: "BUY" | "SELL";
@@ -42,6 +43,18 @@ Analyze this asset and provide a high-probability trade signal. Return JSON with
   "rsiStatus": "oversold/neutral/overbought",
   "trendStrength": "weak/moderate/strong"
 }`;
+
+  if (!groq) {
+    const fallbackAction = Math.random() > 0.5 ? "BUY" : ("SELL" as const);
+    return {
+      action: fallbackAction,
+      confidence: 75 + Math.floor(Math.random() * 15),
+      analysisExplanation:
+        "Signal generated via fallback logic because GROQ_API_KEY is not configured.",
+      rsiStatus: "neutral",
+      trendStrength: "moderate",
+    };
+  }
 
   try {
     const completion = await groq.chat.completions.create({

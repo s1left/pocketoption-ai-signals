@@ -1,0 +1,22 @@
+# Render deployment manifest for the Forex Signal Bot monorepo.
+# This single web service builds both the API and the frontend together.
+# Set real secret values in the Render dashboard or environment variables.
+
+services:
+  - type: web
+    name: forex-signal-bot
+    env: node
+    plan: free
+    branch: main
+    root: artifacts/api-server
+    buildCommand: pnpm install && pnpm --dir ../pocket-ai run build && pnpm run build
+    startCommand: pnpm run start
+    envVars:
+      - key: PORT
+        value: "10000"
+      - key: MONGODB_URI
+        value: "$MONGODB_URI"
+      - key: TELEGRAM_BOT_TOKEN
+        value: "$TELEGRAM_BOT_TOKEN"
+      - key: TELEGRAM_ADMIN_ID
+        value: "$TELEGRAM_ADMIN_ID"

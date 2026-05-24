@@ -1,5 +1,11 @@
 import { Router, type IRouter } from "express";
 import { User } from "../models/User";
+import { isMongoConnected } from "../lib/mongodb";
+import {
+  getFallbackUser,
+  upsertFallbackUser,
+  updateFallbackUserAccess,
+} from "../lib/fallback-db";
 
 const router: IRouter = Router();
 
@@ -7,19 +13,17 @@ const TELEGRAM_BOT_TOKEN = process.env["TELEGRAM_BOT_TOKEN"];
 const TELEGRAM_ADMIN_ID = process.env["TELEGRAM_ADMIN_ID"];
 
 const DURATION_LABELS: Record<string, string> = {
-  "5h": "5 часов",
-  "15h": "15 часов",
-  "24h": "24 часа",
-  "15d": "15 дней",
+  "1d": "1 день",
+  "7d": "7 дней",
+  "14d": "14 дней",
   "30d": "30 дней",
   "life": "Бессрочно",
 };
 
 const DURATION_MS: Record<string, number> = {
-  "5h": 5 * 3600000,
-  "15h": 15 * 3600000,
-  "24h": 24 * 3600000,
-  "15d": 15 * 86400000,
+  "1d": 1 * 86400000,
+  "7d": 7 * 86400000,
+  "14d": 14 * 86400000,
   "30d": 30 * 86400000,
   "life": -1,
 };
@@ -38,12 +42,11 @@ function getAdminKeyboard(userId: string) {
   return {
     inline_keyboard: [
       [
-        { text: "5ч", callback_data: `sel:${userId}:5h` },
-        { text: "15ч", callback_data: `sel:${userId}:15h` },
-        { text: "24ч", callback_data: `sel:${userId}:24h` },
+        { text: "1д", callback_data: `sel:${userId}:1d` },
+        { text: "7д", callback_data: `sel:${userId}:7d` },
+        { text: "14д", callback_data: `sel:${userId}:14d` },
       ],
       [
-        { text: "15д", callback_data: `sel:${userId}:15d` },
         { text: "30д", callback_data: `sel:${userId}:30d` },
         { text: "LIFE", callback_data: `sel:${userId}:life` },
       ],
@@ -65,15 +68,31 @@ router.post("/telegram/webhook", async (req, res) => {
       const username = from.username || from.first_name;
       const isAdmin = userId === TELEGRAM_ADMIN_ID;
 
-      let user = await User.findOne({ telegramId: userId });
+      let user = null;
+      if (isMongoConnected()) {
+        user = await User.findOne({ telegramId: userId });
+      } else {
+        user = await getFallbackUser(userId);
+      }
+
       if (!user) {
-        user = await User.create({
-          telegramId: userId,
-          username: username,
-          hasAccess: isAdmin,
-          status: isAdmin ? "active" : "pending",
-          createdAt: Date.now(),
-        });
+        if (isMongoConnected()) {
+          user = await User.create({
+            telegramId: userId,
+            username,
+            hasAccess: isAdmin,
+            status: isAdmin ? "active" : "pending",
+            createdAt: Date.now(),
+          });
+        } else {
+          user = await upsertFallbackUser({
+            telegramId: userId,
+            username,
+            hasAccess: isAdmin,
+            status: isAdmin ? "active" : "pending",
+            expiresAt: null,
+          });
+        }
       }
 
       if (isAdmin) {
@@ -119,10 +138,18 @@ router.post("/telegram/webhook", async (req, res) => {
         const ms = DURATION_MS[duration];
         const expiresAt = ms === -1 ? -1 : Date.now() + ms;
 
-        await User.findOneAndUpdate(
-          { telegramId: userId },
-          { hasAccess: true, status: "active", expiresAt }
-        );
+        if (isMongoConnected()) {
+          await User.findOneAndUpdate(
+            { telegramId: userId },
+            { hasAccess: true, status: "active", expiresAt }
+          );
+        } else {
+          await updateFallbackUserAccess(userId, {
+            hasAccess: true,
+            expiresAt,
+            status: "active",
+          });
+        }
 
         await tgApi("answerCallbackQuery", { callback_query_id: cb.id });
         await tgApi("editMessageText", {
@@ -140,10 +167,17 @@ router.post("/telegram/webhook", async (req, res) => {
           parse_mode: "HTML",
         });
       } else if (action === "decline") {
-        await User.findOneAndUpdate(
-          { telegramId: userId },
-          { hasAccess: false, status: "blocked" }
-        );
+        if (isMongoConnected()) {
+          await User.findOneAndUpdate(
+            { telegramId: userId },
+            { hasAccess: false, status: "blocked" }
+          );
+        } else {
+          await updateFallbackUserAccess(userId, {
+            hasAccess: false,
+            status: "blocked",
+          });
+        }
 
         await tgApi("answerCallbackQuery", { callback_query_id: cb.id });
         await tgApi("editMessageText", {

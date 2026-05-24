@@ -1,5 +1,13 @@
 import { Router } from "express";
 import { SignalHistory } from "../models/SignalHistory";
+import { isMongoConnected } from "../lib/mongodb";
+import {
+  addFallbackHistoryRecord,
+  clearFallbackHistory,
+  deleteFallbackHistoryForUser,
+  getFallbackHistory,
+  updateFallbackHistoryResult,
+} from "../lib/fallback-db";
 import {
   GetHistoryQueryParams,
   SaveSignalToHistoryBody,
@@ -15,6 +23,22 @@ router.get("/history", async (req, res) => {
     return res.status(400).json({ error: "userId is required" });
   }
   const { userId, limit } = parse.data;
+
+  if (!isMongoConnected()) {
+    const records = await getFallbackHistory(userId, limit);
+    return res.json(records.map((r) => ({
+      _id: r._id,
+      userId: r.userId,
+      currencyPair: r.currencyPair,
+      action: r.action,
+      expiry: r.expiry,
+      confidence: r.confidence,
+      timestamp: r.timestamp,
+      result: r.result,
+      analysisExplanation: r.analysisExplanation ?? null,
+      entryPrice: r.entryPrice ?? null,
+    })));
+  }
 
   const records = await SignalHistory.find({ userId })
     .sort({ timestamp: -1 })
@@ -41,6 +65,27 @@ router.post("/history", async (req, res) => {
   const parse = SaveSignalToHistoryBody.safeParse(req.body);
   if (!parse.success) {
     return res.status(400).json({ error: "Invalid body" });
+  }
+
+  if (!isMongoConnected()) {
+    const doc = await addFallbackHistoryRecord({
+      ...parse.data,
+      result: "PENDING",
+      timestamp: parse.data.timestamp ?? Date.now(),
+    });
+
+    return res.status(201).json({
+      _id: doc._id,
+      userId: doc.userId,
+      currencyPair: doc.currencyPair,
+      action: doc.action,
+      expiry: doc.expiry,
+      confidence: doc.confidence,
+      timestamp: doc.timestamp,
+      result: doc.result,
+      analysisExplanation: doc.analysisExplanation ?? null,
+      entryPrice: doc.entryPrice ?? null,
+    });
   }
 
   const doc = await SignalHistory.create({
@@ -74,6 +119,23 @@ router.patch("/history/:id/result", async (req, res) => {
   const { id } = paramsParse.data;
   const { result } = bodyParse.data;
 
+  if (!isMongoConnected()) {
+    const doc = await updateFallbackHistoryResult(id, result);
+    if (!doc) return res.status(404).json({ error: "Not found" });
+    return res.json({
+      _id: doc._id,
+      userId: doc.userId,
+      currencyPair: doc.currencyPair,
+      action: doc.action,
+      expiry: doc.expiry,
+      confidence: doc.confidence,
+      timestamp: doc.timestamp,
+      result: doc.result,
+      analysisExplanation: doc.analysisExplanation ?? null,
+      entryPrice: doc.entryPrice ?? null,
+    });
+  }
+
   const doc = await SignalHistory.findByIdAndUpdate(
     id,
     { result },
@@ -99,6 +161,12 @@ router.patch("/history/:id/result", async (req, res) => {
 router.delete("/history/clear", async (req, res) => {
   const userId = req.query.userId as string;
   if (!userId) return res.status(400).json({ error: "userId is required" });
+
+  if (!isMongoConnected()) {
+    const result = await clearFallbackHistory(userId);
+    return res.json({ deleted: result.deletedCount });
+  }
+
   const result = await SignalHistory.deleteMany({ userId });
   return res.json({ deleted: result.deletedCount });
 });
@@ -106,6 +174,12 @@ router.delete("/history/clear", async (req, res) => {
 router.delete("/admin/history/:userId", async (req, res) => {
   const userId = req.params.userId;
   if (!userId) return res.status(400).json({ error: "userId is required" });
+
+  if (!isMongoConnected()) {
+    const result = await deleteFallbackHistoryForUser(userId);
+    return res.json({ deleted: result.deletedCount });
+  }
+
   const result = await SignalHistory.deleteMany({ userId });
   return res.json({ deleted: result.deletedCount });
 });

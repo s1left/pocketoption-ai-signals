@@ -1,18 +1,17 @@
-import React, { useEffect } from "react";
-import { useSearch } from "wouter";
+import React, { useState, useLayoutEffect } from "react";
 import { useAuth } from "../hooks/use-auth";
 import { Activity } from "lucide-react";
 import { SiTelegram } from "react-icons/si";
 
 export default function Login() {
   const { login } = useAuth();
-  const search = useSearch();
+  const [initialSearch] = useState(() => window.location.search);
 
-  useEffect(() => {
-    const params = new URLSearchParams(search);
+  useLayoutEffect(() => {
+    const params = new URLSearchParams(initialSearch);
     const id = params.get("id");
     if (id) login(id);
-  }, [search]);
+  }, [initialSearch, login]);
 
   const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME || "Pocketoption_ai_signal_bot";
 
