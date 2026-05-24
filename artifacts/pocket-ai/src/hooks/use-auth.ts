@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { ADMIN_ID } from "../lib/constants";
+import { useCreateOrUpdateUser } from "@workspace/api-client-react";
 
 export function useAuth() {
   const [traderId, setTraderId] = useState<string | null>(null);
   const [, setLocation] = useLocation();
+  const createOrUpdateUser = useCreateOrUpdateUser();
 
   useEffect(() => {
     const id = localStorage.getItem("trader_id");
@@ -18,6 +20,7 @@ export function useAuth() {
   const login = (id: string) => {
     localStorage.setItem("trader_id", id);
     setTraderId(id);
+    createOrUpdateUser.mutate({ data: { telegramId: id, username: id } });
     setLocation("/");
   };
 

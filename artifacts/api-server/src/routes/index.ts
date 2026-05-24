@@ -4,6 +4,7 @@ import signalsRouter from "./signals";
 import historyRouter from "./history";
 import usersRouter from "./users";
 import statsRouter from "./stats";
+import telegramRouter from "./telegram";
 
 const router: IRouter = Router();
 
@@ -12,5 +13,6 @@ router.use(signalsRouter);
 router.use(historyRouter);
 router.use(usersRouter);
 router.use(statsRouter);
+router.use(telegramRouter);
 
 export default router;

@@ -30,3 +30,11 @@ externalPort = 80
 [[ports]]
 localPort = 19177
 externalPort = 3000
+
+[nix]
+channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+VITE_TELEGRAM_BOT_USERNAME = "Pocketoption_ai_signal_bot"
