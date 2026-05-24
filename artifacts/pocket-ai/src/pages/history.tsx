@@ -9,10 +9,11 @@ export default function HistoryPage() {
   const { data: history } = useGetHistory({ userId: traderId || "", limit: 100 }, { 
     query: { 
       enabled: !!traderId,
-      refetchInterval: 30000 // Auto-refresh every 30s
+      refetchInterval: 30000,
+      queryKey: ['history', traderId]
     } 
   });
-  const { data: stats } = useGetUserStats(traderId || "", { query: { enabled: !!traderId } });
+  const { data: stats } = useGetUserStats(traderId || "", { query: { enabled: !!traderId, queryKey: ['stats', traderId] } });
 
   return (
     <div className="flex flex-col gap-6 max-w-7xl mx-auto">

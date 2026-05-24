@@ -6,7 +6,7 @@ import { useAuth } from "../hooks/use-auth";
 
 export default function Analysis() {
   const { traderId } = useAuth();
-  const { data: history } = useGetHistory({ userId: traderId || "", limit: 50 }, { query: { enabled: !!traderId } });
+  const { data: history } = useGetHistory({ userId: traderId || "", limit: 50 }, { query: { enabled: !!traderId, queryKey: ['history-analysis', traderId] } });
 
   // Generate some mock chart data based on history or fake it for visual impact
   const chartData = Array.from({ length: 24 }).map((_, i) => ({
@@ -112,7 +112,7 @@ function TargetIcon(props: any) {
   return (
     <svg
       {...props}
-      xmlns="http://www.w3.org/ माग2000/svg"
+      xmlns="http://www.w3.org/2000/svg"
       width="24"
       height="24"
       viewBox="0 0 24 24"

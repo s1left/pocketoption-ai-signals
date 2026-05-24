@@ -9,7 +9,7 @@ import { useLocation } from "wouter";
 export default function Admin() {
   const { isAdmin } = useAuth();
   const [, setLocation] = useLocation();
-  const { data: users, refetch } = useGetAllUsers({ query: { enabled: isAdmin } });
+  const { data: users, refetch } = useGetAllUsers({ query: { enabled: isAdmin, queryKey: ['users'] } });
   const updateAccess = useUpdateUserAccess();
 
   if (!isAdmin) {

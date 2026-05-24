@@ -81,3 +81,6 @@ export const PAIR_TO_TV_SYMBOL: Record<string, string> = {
 };
 
 export const ADMIN_ID = "8950661719";
+
+export type SignalRequestExpiry = "30s" | "1m" | "2m" | "5m";
+export type BatchSignalRequestExpiry = "30s" | "1m" | "2m" | "5m";
