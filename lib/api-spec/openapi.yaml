@@ -1,22 +1,28 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Pocket AI Signals Pro API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: signals
+    description: Trading signal operations
+  - name: history
+    description: Signal history operations
+  - name: users
+    description: User management
+  - name: stats
+    description: Statistics and analytics
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +30,229 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /signals/generate:
+    post:
+      operationId: generateSignal
+      tags: [signals]
+      summary: Generate AI trading signal for a currency pair
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignalRequest"
+      responses:
+        "200":
+          description: Generated signal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Signal"
+
+  /signals/batch:
+    post:
+      operationId: generateBatchSignals
+      tags: [signals]
+      summary: Generate signals for multiple pairs at once
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BatchSignalRequest"
+      responses:
+        "200":
+          description: Generated signals for all pairs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Signal"
+
+  /history:
+    get:
+      operationId: getHistory
+      tags: [history]
+      summary: Get signal history for a user
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: Signal history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SignalHistory"
+    post:
+      operationId: saveSignalToHistory
+      tags: [history]
+      summary: Save a signal to history
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignalHistoryInput"
+      responses:
+        "201":
+          description: Saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SignalHistory"
+
+  /history/{id}/result:
+    patch:
+      operationId: updateSignalResult
+      tags: [history]
+      summary: Update win/loss result for a signal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignalResultUpdate"
+      responses:
+        "200":
+          description: Updated signal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SignalHistory"
+
+  /users/{userId}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get user by Telegram ID
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          description: User not found
+
+  /users:
+    post:
+      operationId: createOrUpdateUser
+      tags: [users]
+      summary: Create or update user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserInput"
+      responses:
+        "200":
+          description: User created or updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /stats/{userId}:
+    get:
+      operationId: getUserStats
+      tags: [stats]
+      summary: Get win/loss stats for a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserStats"
+
+  /stats/leaderboard:
+    get:
+      operationId: getLeaderboard
+      tags: [stats]
+      summary: Top traders by win rate
+      responses:
+        "200":
+          description: Leaderboard
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LeaderboardEntry"
+
+  /admin/users:
+    get:
+      operationId: getAllUsers
+      tags: [users]
+      summary: Get all users (admin only)
+      responses:
+        "200":
+          description: All users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+  /admin/users/{userId}/access:
+    patch:
+      operationId: updateUserAccess
+      tags: [users]
+      summary: Grant or revoke user access
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccessUpdate"
+      responses:
+        "200":
+          description: Access updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +263,184 @@ components:
       required:
         - status
 
+    SignalRequest:
+      type: object
+      required: [currencyPair, expiry, userId]
+      properties:
+        currencyPair:
+          type: string
+          description: e.g. EUR/USD (OTC)
+        expiry:
+          type: string
+          enum: [30s, 1m, 2m, 5m]
+        userId:
+          type: string
+        currentPrice:
+          type: ["number", "null"]
+
+    BatchSignalRequest:
+      type: object
+      required: [pairs, expiry, userId]
+      properties:
+        pairs:
+          type: array
+          items:
+            type: string
+        expiry:
+          type: string
+          enum: [30s, 1m, 2m, 5m]
+        userId:
+          type: string
+
+    Signal:
+      type: object
+      required: [action, confidence, currencyPair, expiry, analysisExplanation]
+      properties:
+        action:
+          type: string
+          enum: [BUY, SELL]
+        confidence:
+          type: number
+        currencyPair:
+          type: string
+        expiry:
+          type: string
+        analysisExplanation:
+          type: string
+        isOtc:
+          type: ["boolean", "null"]
+        rsiStatus:
+          type: ["string", "null"]
+        trendStrength:
+          type: ["string", "null"]
+
+    SignalHistory:
+      type: object
+      required: [_id, userId, currencyPair, action, expiry, confidence, timestamp, result]
+      properties:
+        _id:
+          type: string
+        userId:
+          type: string
+        currencyPair:
+          type: string
+        action:
+          type: string
+          enum: [BUY, SELL]
+        expiry:
+          type: string
+        confidence:
+          type: number
+        timestamp:
+          type: number
+        result:
+          type: string
+          enum: [PENDING, WIN, LOSS]
+        analysisExplanation:
+          type: ["string", "null"]
+        entryPrice:
+          type: ["number", "null"]
+
+    SignalHistoryInput:
+      type: object
+      required: [userId, currencyPair, action, expiry, confidence, timestamp]
+      properties:
+        userId:
+          type: string
+        currencyPair:
+          type: string
+        action:
+          type: string
+          enum: [BUY, SELL]
+        expiry:
+          type: string
+        confidence:
+          type: number
+        timestamp:
+          type: number
+        analysisExplanation:
+          type: ["string", "null"]
+        entryPrice:
+          type: ["number", "null"]
+
+    SignalResultUpdate:
+      type: object
+      required: [result]
+      properties:
+        result:
+          type: string
+          enum: [WIN, LOSS]
+
+    User:
+      type: object
+      required: [telegramId, username, hasAccess, status, createdAt]
+      properties:
+        telegramId:
+          type: string
+        username:
+          type: string
+        hasAccess:
+          type: boolean
+        status:
+          type: string
+          enum: [active, pending, blocked]
+        createdAt:
+          type: number
+        expiresAt:
+          type: ["number", "null"]
+
+    UserInput:
+      type: object
+      required: [telegramId, username]
+      properties:
+        telegramId:
+          type: string
+        username:
+          type: string
+        hasAccess:
+          type: ["boolean", "null"]
+        status:
+          type: ["string", "null"]
+        expiresAt:
+          type: ["number", "null"]
+
+    AccessUpdate:
+      type: object
+      required: [hasAccess]
+      properties:
+        hasAccess:
+          type: boolean
+        expiresAt:
+          type: ["number", "null"]
+        status:
+          type: ["string", "null"]
+
+    UserStats:
+      type: object
+      required: [userId, total, wins, losses, pending, winRate]
+      properties:
+        userId:
+          type: string
+        total:
+          type: integer
+        wins:
+          type: integer
+        losses:
+          type: integer
+        pending:
+          type: integer
+        winRate:
+          type: number
+
+    LeaderboardEntry:
+      type: object
+      required: [userId, username, winRate, total]
+      properties:
+        userId:
+          type: string
+        username:
+          type: string
+        winRate:
+          type: number
+        total:
+          type: integer
