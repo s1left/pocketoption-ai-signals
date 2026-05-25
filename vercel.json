@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "installCommand": "corepack pnpm install",
+  "installCommand": "corepack pnpm install --no-frozen-lockfile",
   "buildCommand": "corepack pnpm run vercel-build",
   "routes": [
     {
