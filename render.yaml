@@ -9,7 +9,7 @@ services:
     plan: free
     branch: main
     root: artifacts/api-server
-    buildCommand: pnpm install && pnpm --dir ../pocket-ai run build && pnpm run build
+    buildCommand: pnpm install && pnpm --dir ../pocket-ai install && pnpm --dir ../pocket-ai run build && pnpm run build
     startCommand: pnpm run start
     envVars:
       - key: PORT
