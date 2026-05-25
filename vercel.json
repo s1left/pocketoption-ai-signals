@@ -2,10 +2,10 @@
   "version": 2,
   "builds": [
     {
-      "src": "artifacts/pocket-ai/package.json",
+      "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "dist/public"
+        "distDir": "artifacts/pocket-ai/dist/public"
       }
     }
   ],
