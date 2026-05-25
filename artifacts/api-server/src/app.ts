@@ -7,7 +7,7 @@ import router from "./routes";
 import { logger } from "./lib/logger";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const publicPath = path.resolve(__dirname, "../../pocket-ai/dist");
+const publicPath = path.resolve(__dirname, "../../pocket-ai/dist/public");
 
 const app: Express = express();
 
